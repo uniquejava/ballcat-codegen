@@ -20,6 +20,8 @@
 		<velocity.version>1.7</velocity.version>
 		<freemarker.version>2.3.31</freemarker.version>
 		<flyway.version>7.15.0</flyway.version>
+		<dynamic-datasource.version>3.6.1</dynamic-datasource.version>
+		<jasypt.version>3.0.5</jasypt.version>
 	</properties>
 
 	<dependencies>
@@ -38,9 +40,11 @@
 			<artifactId>mybatis-plus-boot-starter</artifactId>
 		</dependency>
 
+		<!-- jasypt 加密 -->
 		<dependency>
 			<groupId>com.github.ulisesbocchio</groupId>
 			<artifactId>jasypt-spring-boot-starter</artifactId>
+			<version>${jasypt.version}</version>
 		</dependency>
 
 		<!-- openapi 扩展处理 -->
@@ -58,6 +62,7 @@
 		<dependency>
 			<groupId>com.baomidou</groupId>
 			<artifactId>dynamic-datasource-spring-boot-starter</artifactId>
+			<version>${dynamic-datasource.version}</version>
 		</dependency>
 
 
@@ -105,6 +110,7 @@
 	</dependencies>
 
 	<build>
+		<finalName>ballcat-codegen</finalName>
 		<resources>
 			<resource>
 				<filtering>true</filtering>
@@ -154,7 +160,7 @@
 						</goals>
 						<configuration>
 							<target>
-								<delete dir="src/main/resources/public" includeemptydirs="true" />
+								<delete dir="src/main/resources/public" includeemptydirs="true"/>
 							</target>
 						</configuration>
 					</execution>
@@ -191,4 +197,36 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<!-- 打包 docker，指定开启 docker profile -->
+	<profiles>
+		<profile>
+			<id>docker</id>
+			<build>
+				<plugins>
+					<!--   dockerfile-maven-plugin      -->
+					<plugin>
+						<groupId>com.spotify</groupId>
+						<artifactId>dockerfile-maven-plugin</artifactId>
+						<version>1.4.13</version>
+						<executions>
+							<execution>
+								<id>default</id>
+								<goals>
+									<goal>build</goal>
+								</goals>
+							</execution>
+						</executions>
+						<configuration>
+							<repository>ballcat-codegen</repository>
+							<tag>latest</tag>
+							<buildArgs>
+								<JAR_FILE>${project.build.finalName}.jar</JAR_FILE>
+							</buildArgs>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>

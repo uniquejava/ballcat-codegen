@@ -79,7 +79,7 @@ public class TemplateEntryServiceImpl extends ExtendServiceImpl<TemplateEntryMap
 		Assert.notEquals(parentId, entry.getParentId(), "The entry do not need to be moved");
 
 		// 重名校验
-		this.duplicateNameCheck(parentId, entry.getFilename());
+		this.duplicateNameCheck(parentId, entry.getFilename(), entry.getGroupKey());
 
 		// 更新目录项
 		TemplateEntry entity = new TemplateEntry();
@@ -92,10 +92,11 @@ public class TemplateEntryServiceImpl extends ExtendServiceImpl<TemplateEntryMap
 	 * 重名校验，同文件夹下不允许重名
 	 * @param entryId 目录项ID
 	 * @param name 文件名
+	 * @param groupKey 模板组标识
 	 */
 	@Override
-	public void duplicateNameCheck(String entryId, String name) {
-		boolean existed = baseMapper.existSameName(entryId, name);
+	public void duplicateNameCheck(String entryId, String name, String groupKey) {
+		boolean existed = baseMapper.existSameName(entryId, name, groupKey);
 		Assert.isFalse(existed, "The entry with the same name already exists");
 	}
 
@@ -239,8 +240,10 @@ public class TemplateEntryServiceImpl extends ExtendServiceImpl<TemplateEntryMap
 			}
 		}
 
-		TemplateFile templateFile = new TemplateFile().setId(current.getId()).setFilename(current.getFilename())
-				.setParentFilePath(path).setType(current.getType());
+		TemplateFile templateFile = new TemplateFile().setId(current.getId())
+			.setFilename(current.getFilename())
+			.setParentFilePath(path)
+			.setType(current.getType());
 		// 目录项类型为文件则记录（文件必然是叶子节点）
 		if (TemplateEntryTypeEnum.TEMPLATE_FILE.equals(current.getType())) {
 			// 查找对应的模板文件详情信息
@@ -269,7 +272,7 @@ public class TemplateEntryServiceImpl extends ExtendServiceImpl<TemplateEntryMap
 		Assert.isTrue(TemplateEntryConstants.TREE_ROOT_ID.equals(parentId) || this.exists(parentId),
 				"This is a nonexistent parent directory entry!");
 		// 重名校验
-		this.duplicateNameCheck(parentId, entryDTO.getFilename());
+		this.duplicateNameCheck(parentId, entryDTO.getFilename(), entryDTO.getGroupKey());
 		// 转持久层对象
 		TemplateEntry entity = TemplateModelConverter.INSTANCE.entryCreateDtoToPo(entryDTO);
 		if (isBinaryFile) {
@@ -296,7 +299,7 @@ public class TemplateEntryServiceImpl extends ExtendServiceImpl<TemplateEntryMap
 		Assert.notNull(oldEntry, "This is a nonexistent directory entry!");
 		// 如果更新了文件名，则进行重名校验
 		if (!filename.equals(oldEntry.getFilename())) {
-			this.duplicateNameCheck(oldEntry.getParentId(), filename);
+			this.duplicateNameCheck(oldEntry.getParentId(), filename, oldEntry.getGroupKey());
 		}
 		// 如果修改类型为模板文件或者二进制文件，则现在不能有子文件存在
 		if (!TemplateEntryTypeEnum.FOLDER.getType().equals(entryDTO.getType())) {

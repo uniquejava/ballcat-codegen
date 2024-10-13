@@ -1,6 +1,7 @@
 package com.hccake.ballcat.codegen.database;
 
 import com.baomidou.mybatisplus.annotation.DbType;
+import com.hccake.ballcat.codegen.constant.TemplateEntryConstants;
 import com.hccake.ballcat.codegen.converter.DbColumnTypeConverter;
 import com.hccake.ballcat.codegen.model.entity.DbColumnType;
 import com.hccake.ballcat.codegen.model.entity.FieldType;
@@ -8,9 +9,12 @@ import com.hccake.ballcat.codegen.service.FieldTypeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ObjectUtils;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author hccake
@@ -27,14 +31,18 @@ public class DbTypeConverterManager {
 	 * @return 字段集合
 	 */
 	public List<FieldType> getDbTypeList(DbType dbType, String templateGroupKey) {
-		List<FieldType> fieldTypeList = fieldTypeService.selectDbTypeList(dbType, templateGroupKey);
-		if (!ObjectUtils.isEmpty(fieldTypeList)) {
-			return fieldTypeList;
+		List<FieldType> fieldTypeList = fieldTypeService.selectFieldTypesWithDefault(dbType, templateGroupKey);
+		Map<String, FieldType> fieldTypeMap = new HashMap<>(fieldTypeList.size());
+		for (FieldType fieldType : fieldTypeList) {
+			String columnKey = fieldType.getColumnKey();
+			String groupKey = fieldType.getGroupKey();
+			// 如果不存在直接填充，或者存在但是指定模板组的配置，就进行覆盖
+			if (!fieldTypeMap.containsKey(columnKey)
+					|| !Objects.equals(TemplateEntryConstants.TREE_ROOT_ID, groupKey)) {
+				fieldTypeMap.put(columnKey, fieldType);
+			}
 		}
-		if (ObjectUtils.isEmpty(fieldTypeList)) {
-			fieldTypeList = fieldTypeService.selectDbTypeList(dbType);
-		}
-		return fieldTypeList;
+		return new ArrayList<>(fieldTypeMap.values());
 	}
 
 	/**
@@ -44,7 +52,7 @@ public class DbTypeConverterManager {
 	 */
 	public DbColumnType getTypeConverter(List<FieldType> typeList, String dataType) {
 		for (FieldType type : typeList) {
-			if (type.getColumnKey().equals(dataType)) {
+			if (type.getColumnKey().equalsIgnoreCase(dataType)) {
 				return DbColumnTypeConverter.INSTANCE.toModel(type);
 			}
 		}

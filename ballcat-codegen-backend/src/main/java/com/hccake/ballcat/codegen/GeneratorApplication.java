@@ -7,15 +7,13 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.Environment;
 
 /**
- * @author Hccake
- * @version 1.0
- * @date 2019/9/12 16:21
+ * @author Hccake 2019/9/12 16:21
  */
 @Slf4j
 @SpringBootApplication
 public class GeneratorApplication {
 
-	public static void main(String[] args) throws ClassNotFoundException {
+	public static void main(String[] args) {
 		ConfigurableApplicationContext context = SpringApplication.run(GeneratorApplication.class, args);
 		Environment bean = context.getBean(Environment.class);
 		String property = bean.getProperty("server.port");

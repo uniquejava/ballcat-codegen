@@ -5,9 +5,8 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.hccake.ballcat.codegen.model.entity.TemplateEntry;
 import com.hccake.ballcat.common.core.constant.GlobalConstants;
 import com.hccake.extend.mybatis.plus.mapper.ExtendMapper;
-import org.apache.ibatis.annotations.Mapper;
-
 import java.util.List;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
  * 模板文件目录项
@@ -30,11 +29,14 @@ public interface TemplateEntryMapper extends ExtendMapper<TemplateEntry> {
 	 * 检测是否在指定目录下存在指定名称的文件
 	 * @param entryId 目录项ID
 	 * @param name 文件名称
+	 * @param groupKey 模板组标识
 	 * @return 是否存在
 	 */
-	default boolean existSameName(String entryId, String name) {
-		Long count = this.selectCount(Wrappers.<TemplateEntry>lambdaQuery().eq(TemplateEntry::getParentId, entryId)
-				.eq(TemplateEntry::getFilename, name));
+	default boolean existSameName(String entryId, String name, String groupKey) {
+		Long count = this.selectCount(Wrappers.<TemplateEntry>lambdaQuery()
+			.eq(TemplateEntry::getParentId, entryId)
+			.eq(TemplateEntry::getGroupKey, groupKey)
+			.eq(TemplateEntry::getFilename, name));
 		return count != null && count > 0;
 	}
 
@@ -56,8 +58,9 @@ public interface TemplateEntryMapper extends ExtendMapper<TemplateEntry> {
 	 */
 	default void updateParentId(String groupKey, String oldParentId, String newParentId) {
 		LambdaUpdateWrapper<TemplateEntry> wrapper = Wrappers.<TemplateEntry>lambdaUpdate()
-				.set(TemplateEntry::getParentId, newParentId).eq(TemplateEntry::getGroupKey, groupKey)
-				.eq(TemplateEntry::getParentId, oldParentId);
+			.set(TemplateEntry::getParentId, newParentId)
+			.eq(TemplateEntry::getGroupKey, groupKey)
+			.eq(TemplateEntry::getParentId, oldParentId);
 		this.update(null, wrapper);
 	}
 
@@ -75,8 +78,9 @@ public interface TemplateEntryMapper extends ExtendMapper<TemplateEntry> {
 	 * @return boolean
 	 */
 	default boolean existSubEntry(String entryId) {
-		Long count = this.selectCount(Wrappers.<TemplateEntry>lambdaQuery().eq(TemplateEntry::getParentId, entryId)
-				.eq(TemplateEntry::getDeleted, GlobalConstants.NOT_DELETED_FLAG));
+		Long count = this.selectCount(Wrappers.<TemplateEntry>lambdaQuery()
+			.eq(TemplateEntry::getParentId, entryId)
+			.eq(TemplateEntry::getDeleted, GlobalConstants.NOT_DELETED_FLAG));
 		return count != null && count > 0;
 	}
 
